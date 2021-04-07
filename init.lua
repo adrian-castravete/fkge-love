@@ -274,6 +274,16 @@ function fkge.message(ename, name, data)
 	events[tickName] = tickEvents
 end
 
+function fkge.count(name)
+	local count = 0
+	for _, e in ipairs(entities) do
+		if e.names[name] then
+			count = count + 1
+		end
+	end
+	return count
+end
+
 function fkge.each(name, func)
 	for _, e in ipairs(entities) do
 		if e.names[name] then
