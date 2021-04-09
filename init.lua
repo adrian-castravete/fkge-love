@@ -43,6 +43,7 @@ local systems = {}
 local scenes = {}
 local entities = {}
 local currentScene = {}
+local coroutines = {}
 
 local function Scene(name, func)
 	if func then
@@ -185,6 +186,18 @@ function love.update(dt)
 	lg.setCanvas(viewport.canvas)
 
 	tick = tick + 1
+
+	local newCoroutines = {}
+	for _, co in ipairs(coroutines) do
+		if coroutine.resume(co, dt) then
+			newCoroutines[#newCoroutines+1] = co
+		end
+	end
+	coroutines = newCoroutines
+	if #coroutines > 0 then
+		log.debug(#coroutines .. " pending.")
+	end
+
 	local newEntities = {}
 	for _, e in ipairs(entities) do
 		for name, func in pairs(systems) do
@@ -290,6 +303,31 @@ function fkge.each(name, func)
 			func(e)
 		end
 	end
+end
+
+local function lerp(a, b, r)
+	return a + r * (b - a)
+end
+
+function fkge.anim(entity, property, stop, time, ease)
+	local start = entity[property]
+	if not start then
+		log.warn("Unknown initial state for entity("..entity.id..")."..property)
+		return
+	end
+	if not ease then
+		ease = lerp
+	end
+	local co = coroutine.create(function (dt)
+		local p = dt
+		while p <= time do
+			entity[property] = ease(start, stop, p / time)
+			dt = coroutine.yield(entity[property])
+			p = p + dt
+		end
+		entity[property] = stop
+	end)
+	coroutines[#coroutines+1] = co
 end
 
 function fkge.stop()
