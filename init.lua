@@ -334,4 +334,10 @@ function fkge.stop()
 	love.event.quit()
 end
 
+function fkge.wipe()
+	for _, e in ipairs(entities) do
+		e.destroy = true
+	end
+end
+
 return fkge
