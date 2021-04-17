@@ -32,6 +32,7 @@ end
 local vCfg = {
 	width = 360,
 	height = 240,
+	background = {0, 0, 0},
 	cameraX = 0,
 	cameraY = 0,
 }
@@ -184,6 +185,7 @@ end
 
 function love.update(dt)
 	lg.setCanvas(viewport.canvas)
+	lg.clear(vCfg.background)
 
 	tick = tick + 1
 
@@ -246,7 +248,7 @@ end
 
 function fkge.game(config)
 	lg.setDefaultFilter('nearest', 'nearest')
-	vCfg = tableSelect(config, {"width", "height"})
+	vCfg = tableSelect(config, {"width", "height", "background"})
 	viewport.setup(vCfg)
 
 	if config.logLevel then
