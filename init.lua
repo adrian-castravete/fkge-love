@@ -234,16 +234,35 @@ function love.keyreleased(key)
 	fkge.message('input', 'keyreleased', key)
 end
 
-function love.joystickpressed(joy, button)
-	fkge.message('input', 'joystickpressed', {joy, button})
+local function mouseToMapCoords(x, y)
+	local v = viewport
+	return (x - v.offsetX) / v.scale, (y - v.offsetY) / v.scale
 end
 
-function love.joystickreleased(joy, button)
-	fkge.message('input', 'joystickreleased', {joy, button})
+for _, part in ipairs {'pressed', 'released', 'moved'} do
+	local name = 'mouse' .. part
+	love[name] = function(x, y, ...)
+		local sx, sy = mouseToMapCoords(x, y)
+		fkge.message('input', name, {sx, sy, ...})
+	end
 end
 
-function love.joystickaxis(joy, axis, value)
-	fkge.message('input', 'joystickaxis', {joy, axis, value})
+for _, part in ipairs {'pressed', 'released', 'moved'} do
+	local name = 'touch' .. part
+	love[name] = function(tid, x, y, ...)
+		local sx, sy = mouseToMapCoords(x, y)
+		fkge.message('input', name, {tid, sx, sy, ...})
+	end
+end
+
+for _, name in ipairs {
+	'joystickpressed', 'joystickreleased', 'joystickaxis',
+	'gamepadpressed', 'gamepadreleased', 'gamepadaxis',
+	'wheelmoved',
+} do
+	love[name] = function (...)
+		fkge.message('input', name, {...})
+	end
 end
 
 function fkge.game(config)
@@ -318,16 +337,16 @@ function fkge.anim(entity, property, stop, time, ease)
 		return
 	end
 	if not ease then
-		ease = lerp
+		ease = function (v) return v end
 	end
 	local co = coroutine.create(function (dt)
 		local p = dt
 		while p <= time do
-			entity[property] = ease(start, stop, p / time)
+			entity[property] = lerp(start, stop, ease(p / time))
 			dt = coroutine.yield(entity[property])
 			p = p + dt
 		end
-		entity[property] = stop
+		entity[property] = lerp(start, stop, ease(1))
 	end)
 	coroutines[#coroutines+1] = co
 end
