@@ -51,6 +51,7 @@ local function Scene(name, func)
 		scenes[name] = {
 			init = func,
 			entities = {},
+			imageCache = {},
 		}
 		log.debug("Defined scene '"..name.."'")
 	else
@@ -330,7 +331,7 @@ local function lerp(a, b, r)
 	return a + r * (b - a)
 end
 
-function fkge.anim(entity, property, stop, time, ease)
+function fkge.anim(entity, property, stop, time, ease, callback)
 	local start = entity[property]
 	if not start then
 		log.warn("Unknown initial state for entity("..entity.id..")."..property)
@@ -346,7 +347,10 @@ function fkge.anim(entity, property, stop, time, ease)
 			dt = coroutine.yield(entity[property])
 			p = p + dt
 		end
-		entity[property] = lerp(start, stop, ease(1))
+		entity[property] = stop
+		if callback then
+			callback(entity)
+		end
 	end)
 	coroutines[#coroutines+1] = co
 end
@@ -359,6 +363,10 @@ function fkge.wipe()
 	for _, e in ipairs(entities) do
 		e.destroy = true
 	end
+end
+
+function fkge.spr(config)
+	return spritesheet.build(config, currentScene.imageCache)
 end
 
 return fkge

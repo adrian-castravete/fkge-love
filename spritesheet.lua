@@ -1,13 +1,28 @@
 local lg = love.graphics
 
+local imgCache = {}
 local spritesheet = {}
+
+local function getImage(fileName, imgCache)
+	local img = imgCache[fileName]
+	if not img then
+		img = lg.newImage(fileName)
+		imgCache[fileName] = img
+	end
+	return img
+end
 
 function spritesheet.build(config)
 	if not (config and config.fileName) then
 		error("fileName missing from spritesheet config", 2)
 	end
 
-	local image = lg.newImage(config.fileName)
+	local icache = imgCache
+	if config.imageCache then
+		icache = config.imageCache
+	end
+
+	local image = getImage(config.fileName, icache)
 	local iw, ih = image:getDimensions()
 
 	local sprs = {
