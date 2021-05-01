@@ -1,6 +1,7 @@
 local cpath = ...
 local log = require(cpath..".log")
 log.level = 'info'
+local lg = love.graphics
 local spritesheet = require(cpath..".spritesheet")
 local viewport = require(cpath..".viewport")
 
@@ -124,7 +125,7 @@ local function System(name, data)
 end
 
 local entId = 0
-local function Entity(name)
+local function Entity(name, ...)
 	entId = entId + 1
 
 	local entity = {
@@ -159,9 +160,28 @@ local function Entity(name)
 
 	entities[#entities+1] = entity
 
+	if entity.init then
+		entity.init(entity, ...)
+	end
+
 	log.debug("Created entity "..entId.." of kind '"..name.."'")
 
 	return entity
+end
+
+local function ComponentSystem(config)
+	local name = config.name or error("Component name not given", 2)
+	local parents = config.parents
+	local sysData = config.system
+	local toDelete = config.delete
+	tableUpdate(config, {}, {'name', 'parents', 'system', 'delete'})
+	local component = Component(name, parents, config, toDelete)
+	local system = nil
+	if sysData then
+		system = System(name, sysData)
+	end
+
+	return component, system
 end
 
 local fkge = {
@@ -169,9 +189,11 @@ local fkge = {
 	component = Component,
 	entity = Entity,
 	system = System,
+	componentSystem = ComponentSystem,
 	c = Component,
 	e = Entity,
 	s = System,
+	cs = ComponentSystem,
 }
 
 function love.load()
@@ -267,6 +289,8 @@ for _, name in ipairs {
 end
 
 function fkge.game(config)
+	local config = config or {}
+
 	lg.setDefaultFilter('nearest', 'nearest')
 	vCfg = tableSelect(config, {"width", "height", "background"})
 	viewport.setup(vCfg)
