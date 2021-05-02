@@ -351,6 +351,41 @@ function fkge.each(name, func)
 	end
 end
 
+function fkge.find(name, func)
+	for _, e in ipairs(entities) do
+		if e.names[name] then
+			local f = func(e)
+			if f then
+				return f
+			end
+		end
+	end
+	return nil
+end
+
+function fkge.map(name, func)
+	local results = {}
+	for _, e in ipairs(entities) do
+		if e.names[name] then
+			results[#results+1] = func(e)
+		end
+	end
+	return results
+end
+
+function fkge.reduce(name, func, accum)
+	local accum = accum
+	for _, e in ipairs(entities) do
+		if e.names[name] then
+			local res = func(e, accum)
+			if res then
+				accum = res
+			end
+		end
+	end
+	return accum
+end
+
 local function lerp(a, b, r)
 	return a + r * (b - a)
 end
