@@ -386,29 +386,21 @@ function fkge.reduce(name, func, accum)
 	return accum
 end
 
-local function lerp(a, b, r)
+function fkge.lerp(a, b, r)
 	return a + r * (b - a)
 end
 
-function fkge.anim(entity, property, stop, time, ease, callback)
-	local start = entity[property]
-	if not start then
-		log.warn("Unknown initial state for entity("..entity.id..")."..property)
-		return
-	end
-	if not ease then
-		ease = function (v) return v end
-	end
+function fkge.anim(time, progress, callback)
 	local co = coroutine.create(function (dt)
 		local p = dt
 		while p <= time do
-			entity[property] = lerp(start, stop, ease(p / time))
-			dt = coroutine.yield(entity[property])
+			local r = p / time
+			local v = progress(r) or r
+			dt = coroutine.yield(r)
 			p = p + dt
 		end
-		entity[property] = stop
 		if callback then
-			callback(entity)
+			callback()
 		end
 	end)
 	coroutines[#coroutines+1] = co
