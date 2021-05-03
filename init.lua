@@ -336,7 +336,7 @@ end
 function fkge.count(name)
 	local count = 0
 	for _, e in ipairs(entities) do
-		if e.names[name] then
+		if not name or e.names[name] then
 			count = count + 1
 		end
 	end
@@ -345,7 +345,7 @@ end
 
 function fkge.each(name, func)
 	for _, e in ipairs(entities) do
-		if e.names[name] then
+		if not name or e.names[name] then
 			func(e)
 		end
 	end
@@ -353,7 +353,7 @@ end
 
 function fkge.find(name, func)
 	for _, e in ipairs(entities) do
-		if e.names[name] then
+		if not name or e.names[name] then
 			local f = func(e)
 			if f then
 				return f
@@ -366,7 +366,7 @@ end
 function fkge.map(name, func)
 	local results = {}
 	for _, e in ipairs(entities) do
-		if e.names[name] then
+		if not name or e.names[name] then
 			results[#results+1] = func(e)
 		end
 	end
@@ -376,7 +376,7 @@ end
 function fkge.reduce(name, func, accum)
 	local accum = accum
 	for _, e in ipairs(entities) do
-		if e.names[name] then
+		if not name or e.names[name] then
 			local res = func(e, accum)
 			if res then
 				accum = res
@@ -418,9 +418,14 @@ function fkge.stop()
 	love.event.quit()
 end
 
-function fkge.wipe()
-	for _, e in ipairs(entities) do
-		e.destroy = true
+function fkge.wipe(cb)
+	if currentScene then
+		for _, e in ipairs(entities) do
+			e.destroy = true
+		end
+		currentScene.entities = {}
+		entities = currentScene.entities
+		cb()
 	end
 end
 
