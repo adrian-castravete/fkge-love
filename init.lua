@@ -160,6 +160,12 @@ local function Entity(name, ...)
 
 	entities[#entities+1] = entity
 
+	for cname, _ in pairs(names) do
+		local pcomp = Component(cname)
+		if pcomp.init then
+			pcomp.init(entity, ...)
+		end
+	end
 	if entity.init then
 		entity.init(entity, ...)
 	end
@@ -354,6 +360,9 @@ end
 function fkge.find(name, func)
 	for _, e in ipairs(entities) do
 		if not name or e.names[name] then
+			if not func then
+				return e
+			end
 			local f = func(e)
 			if f then
 				return f
