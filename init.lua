@@ -160,12 +160,13 @@ local function Entity(name, ...)
 
 	entities[#entities+1] = entity
 
+	--[[Creates more problems than it solves
 	for cname, _ in pairs(names) do
 		local pcomp = Component(cname)
 		if pcomp.init then
 			pcomp.init(entity, ...)
 		end
-	end
+	end--]]
 	if entity.init then
 		entity.init(entity, ...)
 	end
@@ -230,6 +231,8 @@ function love.update(dt)
 	end
 
 	local newEntities = {}
+	local newUnderEntities = {}
+	local newOverEntities = {}
 	for _, e in ipairs(entities) do
 		for name, func in pairs(systems) do
 			if e.names[name] then
@@ -238,10 +241,25 @@ function love.update(dt)
 			end
 		end
 		if not e.destroy then
-			newEntities[#newEntities + 1] = e
+			if e.placeOver then
+				newOverEntities[#newOverEntities + 1] = e
+			elseif e.placeUnder then
+				newUnderEntities[#newUnderEntities + 1] = e
+			else
+				newEntities[#newEntities + 1] = e
+			end
 		end
 	end
-	entities = newEntities
+	entities = {}
+	for _, e in ipairs(newUnderEntities) do
+		entities[#entities + 1] = e
+	end
+	for _, e in ipairs(newEntities) do
+		entities[#entities + 1] = e
+	end
+	for _, e in ipairs(newOverEntities) do
+		entities[#entities + 1] = e
+	end
 	if currentScene then
 		currentScene.entities = entities
 	end
